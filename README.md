@@ -4,7 +4,7 @@ This project was created as part of my work in CSCI425 Compiler Design at Colora
 
 ## Features
 1. Parse a regular expression into an NFA
-2. (TODO) Convert an NFA into a DFA
+2. Convert an NFA into a DFA
 3. (TODO) Optimize generated DFAs
 4. (TODO) Test if a specific string matches a Regular Expression (After converting to a DFA)
 5. (TODO) Generate the set of all possible matches to a Regular Expression (With specified recursion limit for Kleene Closures)

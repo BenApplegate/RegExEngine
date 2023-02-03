@@ -2,10 +2,10 @@
 
 public class NFA
 {
-    private int numStates;
-    private List<bool> acceptingStates;
-    private List<HashSet<int>> lambdaTransitions;
-    private List<Dictionary<char, HashSet<int>>> letterTransitions;
+    public int numStates;
+    public List<bool> acceptingStates;
+    public List<HashSet<int>> lambdaTransitions;
+    public List<Dictionary<char, HashSet<int>>> letterTransitions;
 
     private int initNewState(bool accepting = false)
     {
