@@ -5,7 +5,7 @@ public class DFA
     private int numStates = 0;
     private List<bool> acceptingStates = new List<bool>();
     private Dictionary<string, int> stateSets = new Dictionary<string, int>();
-    private List<Dictionary<char, int>> transitions = new List<Dictionary<char, int>>();
+    private List<SortedDictionary<char, int>> transitions = new List<SortedDictionary<char, int>>();
     private HashSet<char> alphabet = new HashSet<char>();
 
 
@@ -26,9 +26,18 @@ public class DFA
             }
         acceptingStates.Add(isAccepting);
         stateSets[String.Join(' ', stateSet)] = stateNum;
-        transitions.Add(new Dictionary<char, int>());
+        transitions.Add(new SortedDictionary<char, int>());
         return stateNum;
     }
+
+    public int initBlankState(bool isAccepting = false){
+        int stateNum = numStates;
+        numStates++;
+        acceptingStates.Add(isAccepting);
+        transitions.Add(new SortedDictionary<char, int>());
+        return stateNum;
+    }
+
     private SortedSet<int> FollowLambda(SortedSet<int> currentStates, NFA nfa)
     {
         Stack<int> searchPath = new Stack<int>();
@@ -66,6 +75,8 @@ public class DFA
         return newStates;
     }
     
+    private DFA(){}
+
     public DFA(NFA nfa)
     {
         for(int i = 0; i < nfa.numStates; i++)
@@ -107,7 +118,80 @@ public class DFA
         }
     }
 
-    public void Print()
+    public Dictionary<int, int> getMergableStates(){
+        Dictionary<string, int> seenStates = new Dictionary<string, int>();
+        Dictionary<int, int> statesToMerge = new Dictionary<int, int>();
+
+        for(int i = 0; i < numStates; i++){
+            string tRepresentation = $"{(acceptingStates[i] ? "true" : "false")} ";
+            foreach(var t in transitions[i]){
+                tRepresentation += $"{t.Key}:{(t.Value == i ? '*' : t.Value)} ";
+                if(!seenStates.ContainsKey(tRepresentation)){
+                    seenStates[tRepresentation] = i;
+                }
+                else{
+                    statesToMerge[i] = seenStates[tRepresentation];
+                }
+            }
+        }
+
+        return statesToMerge;
+    }
+
+    public (bool status, DFA? merged) mergeStates(){
+        var mergableStates = getMergableStates();
+        if(mergableStates.Count == 0) return (false, null);
+
+        DFA after = new DFA();
+        foreach(char c in this.alphabet) after.alphabet.Add(c);
+
+        Dictionary<int, int> mapping = new Dictionary<int, int>();
+        int shifts = 0;
+
+        for(int i = 0; i < this.numStates; i++){
+            if(mergableStates.ContainsKey(i)){
+                shifts++;
+                break;
+            }
+
+            int newStateNum = after.initBlankState();
+            after.acceptingStates[newStateNum] = acceptingStates[i];
+            mapping[i] = newStateNum;
+            foreach(var t in transitions[i]){
+                int transitionTo;
+                if(mergableStates.ContainsKey(t.Value)){
+                    transitionTo = mergableStates[t.Value];
+                }
+                else{
+                    transitionTo = t.Value;
+                }
+
+                if(mapping.ContainsKey(transitionTo)){
+                    transitionTo = mapping[transitionTo];
+                }
+                else{
+                    transitionTo -= shifts;
+                }
+
+                after.transitions[newStateNum].Add(t.Key, transitionTo);
+            }
+        }
+
+        return (true, after);
+    }
+
+    public DFA Optimize(){
+        DFA merged = this;
+        (bool state, DFA? altered) mergeState = (false, null);
+        do{
+            mergeState = merged.mergeStates();
+            if(mergeState.state) merged = mergeState.altered!;
+        }while(mergeState.state);
+
+        return merged;
+    }
+
+    public void Print(bool showMapping = true)
     {
         for (int i = 0; i < numStates; i++)
         {
@@ -127,6 +211,8 @@ public class DFA
             Console.WriteLine("}");
         }
         
+        if(!showMapping) return;
+
         Console.WriteLine("\n------\nNFA->DFA mapping");
         foreach (var m in stateSets)
         {

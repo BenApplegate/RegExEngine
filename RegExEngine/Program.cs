@@ -34,3 +34,7 @@ catch (Exception e)
 
 dfa.Print();
 
+Console.WriteLine("\n\nNow attempting to merge states");
+    
+DFA merged = dfa.Optimize();
+merged.Print(false);
