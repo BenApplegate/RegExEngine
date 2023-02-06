@@ -129,7 +129,7 @@ public class DFA
             string tRepresentation = $"{(acceptingStates[i] ? "true" : "false")} ";
             foreach (var t in transitions[i])
             {
-                tRepresentation += $"{t.Key}:{(t.Value == i ? "*" : t.Value)} ";
+                tRepresentation += $"{t.Key}:{t.Value} ";
 
             }
             if (!seenStates.ContainsKey(tRepresentation))
@@ -140,7 +140,6 @@ public class DFA
             {
                 statesToMerge[i] = seenStates[tRepresentation];
             }
-            
         }
 
         return statesToMerge;
