@@ -18,10 +18,10 @@ public class DFA
         int stateNum = numStates;
         numStates++;
         bool isAccepting = false;
-        foreach(int i in stateSet)
+        foreach (int i in stateSet)
             if (nfa.acceptingStates[i])
             {
-                isAccepting = true; 
+                isAccepting = true;
                 break;
             }
         acceptingStates.Add(isAccepting);
@@ -30,7 +30,8 @@ public class DFA
         return stateNum;
     }
 
-    public int initBlankState(bool isAccepting = false){
+    public int initBlankState(bool isAccepting = false)
+    {
         int stateNum = numStates;
         numStates++;
         acceptingStates.Add(isAccepting);
@@ -64,8 +65,8 @@ public class DFA
         SortedSet<int> newStates = new SortedSet<int>();
         foreach (int s in currentStates)
         {
-            if(!nfa.letterTransitions[s].ContainsKey(c)) continue;
-            
+            if (!nfa.letterTransitions[s].ContainsKey(c)) continue;
+
             foreach (var transition in nfa.letterTransitions[s][c])
             {
                 newStates.Add(transition);
@@ -74,19 +75,19 @@ public class DFA
 
         return newStates;
     }
-    
-    private DFA(){}
+
+    private DFA() { }
 
     public DFA(NFA nfa)
     {
-        for(int i = 0; i < nfa.numStates; i++)
+        for (int i = 0; i < nfa.numStates; i++)
         {
             foreach (var t in nfa.letterTransitions[i])
             {
                 alphabet.Add(t.Key);
             }
         }
-        
+
         Stack<SortedSet<int>> searchList = new Stack<SortedSet<int>>();
         SortedSet<int> startingState = new SortedSet<int>() { 0 };
         startingState = FollowLambda(startingState, nfa);
@@ -100,8 +101,8 @@ public class DFA
             foreach (char c in alphabet)
             {
                 SortedSet<int> transitionTo = FollowLambda(FollowChar(c, stateList, nfa), nfa);
-                if(transitionTo.Count == 0) continue;
-                
+                if (transitionTo.Count == 0) continue;
+
                 int transitionToState;
                 if (!stateExists(transitionTo))
                 {
@@ -112,64 +113,90 @@ public class DFA
                 {
                     transitionToState = stateSets[String.Join(' ', transitionTo)];
                 }
-                
+
                 transitions[stateId].Add(c, transitionToState);
             }
         }
     }
 
-    public Dictionary<int, int> getMergableStates(){
+    public Dictionary<int, int> getMergableStates()
+    {
         Dictionary<string, int> seenStates = new Dictionary<string, int>();
         Dictionary<int, int> statesToMerge = new Dictionary<int, int>();
 
-        for(int i = 0; i < numStates; i++){
+        for (int i = 0; i < numStates; i++)
+        {
             string tRepresentation = $"{(acceptingStates[i] ? "true" : "false")} ";
-            foreach(var t in transitions[i]){
-                tRepresentation += $"{t.Key}:{(t.Value == i ? '*' : t.Value)} ";
-                if(!seenStates.ContainsKey(tRepresentation)){
-                    seenStates[tRepresentation] = i;
-                }
-                else{
-                    statesToMerge[i] = seenStates[tRepresentation];
-                }
+            foreach (var t in transitions[i])
+            {
+                tRepresentation += $"{t.Key}:{(t.Value == i ? "*" : t.Value)} ";
+
             }
+            if (!seenStates.ContainsKey(tRepresentation))
+            {
+                seenStates[tRepresentation] = i;
+            }
+            else
+            {
+                statesToMerge[i] = seenStates[tRepresentation];
+            }
+            Console.WriteLine(tRepresentation);
+        }
+
+        Console.WriteLine("\n\nPrinting mergable states");
+        foreach (var m in statesToMerge)
+        {
+            Console.WriteLine($"{m.Key}->{m.Value}");
         }
 
         return statesToMerge;
     }
 
-    public (bool status, DFA? merged) mergeStates(){
+    public (bool status, DFA? merged) mergeStates()
+    {
         var mergableStates = getMergableStates();
-        if(mergableStates.Count == 0) return (false, null);
+        if (mergableStates.Count == 0) return (false, null);
 
         DFA after = new DFA();
-        foreach(char c in this.alphabet) after.alphabet.Add(c);
+        foreach (char c in this.alphabet) after.alphabet.Add(c);
 
         Dictionary<int, int> mapping = new Dictionary<int, int>();
-        int shifts = 0;
 
-        for(int i = 0; i < this.numStates; i++){
-            if(mergableStates.ContainsKey(i)){
-                shifts++;
+        for (int i = 0; i < this.numStates; i++)
+        {
+            if (mergableStates.ContainsKey(i))
+            {
                 break;
             }
 
             int newStateNum = after.initBlankState();
             after.acceptingStates[newStateNum] = acceptingStates[i];
             mapping[i] = newStateNum;
-            foreach(var t in transitions[i]){
+            foreach (var t in transitions[i])
+            {
                 int transitionTo;
-                if(mergableStates.ContainsKey(t.Value)){
+                if (mergableStates.ContainsKey(t.Value))
+                {
                     transitionTo = mergableStates[t.Value];
                 }
-                else{
+                else
+                {
                     transitionTo = t.Value;
                 }
 
-                if(mapping.ContainsKey(transitionTo)){
+                if (mapping.ContainsKey(transitionTo))
+                {
                     transitionTo = mapping[transitionTo];
                 }
-                else{
+                else
+                {
+                    int shifts = 0;
+                    for (int j = 0; j < transitionTo; j++)
+                    {
+                        if (mergableStates.ContainsKey(j))
+                            shifts++;
+                    }
+
                     transitionTo -= shifts;
                 }
 
@@ -180,13 +207,15 @@ public class DFA
         return (true, after);
     }
 
-    public DFA Optimize(){
+    public DFA Optimize()
+    {
         DFA merged = this;
         (bool state, DFA? altered) mergeState = (false, null);
-        do{
+        do
+        {
             mergeState = merged.mergeStates();
-            if(mergeState.state) merged = mergeState.altered!;
-        }while(mergeState.state);
+            if (mergeState.state) merged = mergeState.altered!;
+        } while (mergeState.state);
 
         return merged;
     }
@@ -196,22 +225,22 @@ public class DFA
         for (int i = 0; i < numStates; i++)
         {
             Console.Write($"State {i}: ");
-            if(i == 0) Console.Write("Start, ");
+            if (i == 0) Console.Write("Start, ");
             Console.Write(acceptingStates[i] ? "Accepting\t " : "Not Accepting\t ");
             Console.Write("Transitions: {");
-            
+
             int j = 0;
             int count = transitions[i].Count - 1;
             foreach (var state in transitions[i])
             {
                 Console.Write($"{{{state.Key}, {String.Join(", ", state.Value)}}}");
-                if(j < count) Console.Write(", ");
+                if (j < count) Console.Write(", ");
                 j++;
             }
             Console.WriteLine("}");
         }
-        
-        if(!showMapping) return;
+
+        if (!showMapping) return;
 
         Console.WriteLine("\n------\nNFA->DFA mapping");
         foreach (var m in stateSets)
