@@ -140,13 +140,7 @@ public class DFA
             {
                 statesToMerge[i] = seenStates[tRepresentation];
             }
-            Console.WriteLine(tRepresentation);
-        }
-
-        Console.WriteLine("\n\nPrinting mergable states");
-        foreach (var m in statesToMerge)
-        {
-            Console.WriteLine($"{m.Key}->{m.Value}");
+            
         }
 
         return statesToMerge;
