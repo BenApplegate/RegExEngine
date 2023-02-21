@@ -136,6 +136,52 @@ public class NFA
         }
     }
 
+    public NFA(List<string> lines, out List<char> alphabet)
+    {
+        string[] firstLine = lines[0].Split(" ");
+        char lambdaChar = firstLine[1][0];
+        alphabet = new List<char>();
+        for (int i = 2; i < firstLine.Length; i++)
+        {
+            alphabet.Add(firstLine[i][0]);
+        }
+
+        numStates = int.Parse(firstLine[0]);
+        this.acceptingStates = new List<bool>(numStates);
+        this.lambdaTransitions = new List<HashSet<int>>(numStates);
+        this.letterTransitions = new List<Dictionary<char, HashSet<int>>>(numStates);
+        for (int i = 0; i < numStates; i++)
+        {
+            acceptingStates.Add(false);
+            lambdaTransitions.Add(new HashSet<int>());
+            letterTransitions.Add(new Dictionary<char, HashSet<int>>());
+        }
+
+        for (int i = 1; i < lines.Count; i++)
+        {
+            string[] split = lines[i].Split(' ');
+            int from = int.Parse(split[1]);
+            int to = int.Parse(split[2]);
+            acceptingStates[from] = split[0] == "+";
+            for (int j = 3; j < split.Length; j++)
+            {
+                char c = split[j][0];
+                if (c == lambdaChar)
+                {
+                    lambdaTransitions[from].Add(to);
+                }
+                else
+                {
+                    if (!letterTransitions[from].ContainsKey(c))
+                    {
+                        letterTransitions[from][c] = new HashSet<int>();
+                    }
+
+                    letterTransitions[from][c].Add(to);
+                }
+            }
+        }
+    }
     public void Print()
     {
         for (int i = 0; i < numStates; i++)

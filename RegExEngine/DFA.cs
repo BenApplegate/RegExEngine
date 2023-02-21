@@ -1,4 +1,7 @@
-﻿namespace RegExEngine;
+﻿using System.Diagnostics;
+using System.Text;
+
+namespace RegExEngine;
 
 public class DFA
 {
@@ -159,7 +162,7 @@ public class DFA
         {
             if (mergableStates.ContainsKey(i))
             {
-                break;
+                continue;
             }
 
             int thisNode;
@@ -173,7 +176,7 @@ public class DFA
                 mapping[i] = thisNode;
             }
 
-            foreach (var t in this.transitions[thisNode])
+            foreach (var t in this.transitions[i])
             {
                 int transitionTo = t.Value;
                 if (mergableStates.ContainsKey(transitionTo))
@@ -192,7 +195,7 @@ public class DFA
                     transitionTo = newNode;
                 }
                 
-                after.transitions[i].Add(t.Key, transitionTo);
+                after.transitions[thisNode].Add(t.Key, transitionTo);
             }
         }
 
@@ -239,5 +242,33 @@ public class DFA
         {
             Console.WriteLine($"{{{m.Key.Replace(" ", ", ")}}} -> State {m.Value}");
         }
+    }
+
+    public void OutputToFile(string fileName, List<char> alphabetOrder)
+    {
+        var file = File.OpenWrite(fileName);
+        for (int i = 0; i < numStates; i++)
+        {
+            string line = "";
+            line += acceptingStates[i] ? "+ " : "- ";
+            line += i.ToString() + ' ';
+            foreach (char c in alphabetOrder)
+            {
+                if (transitions[i].ContainsKey(c))
+                {
+                    line += $"{transitions[i][c]} ";
+                }
+                else
+                {
+                    line += "E ";
+                }
+            }
+
+            line = line.TrimEnd();
+            line += '\n';
+            file.Write(Encoding.ASCII.GetBytes(line), 0, line.Length);
+        }
+        file.Flush();
+        file.Close();
     }
 }
