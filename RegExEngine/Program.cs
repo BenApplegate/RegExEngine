@@ -1,4 +1,6 @@
-﻿namespace RegExEngine;
+﻿using System.Text.RegularExpressions;
+
+namespace RegExEngine;
 
 class Program
 {
@@ -31,11 +33,21 @@ class Program
         NFA nfa = new NFA(inputFile, out List<char> alphabet);
 
         DFA dfa = new DFA(nfa);
-        dfa.Print();
-        dfa = dfa.Optimize();
-        dfa.Print(false);
-        
+
         dfa.OutputToFile(args[1], alphabet);
+
+        for (int i = 2; i < args.Length; i++)
+        {
+            (bool match, int pos) res = dfa.match(args[i]);
+            if (res.match)
+            {
+                Console.WriteLine("OUTPUT :M:");
+            }
+            else
+            {
+                Console.WriteLine($"OUTPUT {res.pos}");
+            }
+        }
     }
 
     public static void noArgs()

@@ -271,4 +271,29 @@ public class DFA
         file.Flush();
         file.Close();
     }
+
+    public (bool matched, int failPoint) match(string st)
+    {
+        if (st.Length == 0 && !acceptingStates[0]) return (false, 0);
+        
+        int currentNode = 0;
+        for (int i = 0; i < st.Length; i++)
+        {
+            if (transitions[currentNode].ContainsKey(st[i]))
+            {
+                currentNode = transitions[currentNode][st[i]];
+            }
+            else
+            {
+                return (false, i+1);
+            }
+        }
+
+        if (acceptingStates[currentNode])
+        {
+            return (true, -1);
+        }
+
+        return (false, st.Length+1);
+    }
 }
