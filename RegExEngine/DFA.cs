@@ -162,19 +162,23 @@ public class DFA
                 break;
             }
 
-            int newStateNum = after.initBlankState();
-            after.acceptingStates[newStateNum] = acceptingStates[i];
-            mapping[i] = newStateNum;
-            foreach (var t in transitions[i])
+            int thisNode;
+            if (mapping.ContainsKey(i))
             {
-                int transitionTo;
-                if (mergableStates.ContainsKey(t.Value))
+                thisNode = mapping[i];
+            }
+            else
+            {
+                thisNode = after.initBlankState(acceptingStates[i]);
+                mapping[i] = thisNode;
+            }
+
+            foreach (var t in this.transitions[thisNode])
+            {
+                int transitionTo = t.Value;
+                if (mergableStates.ContainsKey(transitionTo))
                 {
-                    transitionTo = mergableStates[t.Value];
-                }
-                else
-                {
-                    transitionTo = t.Value;
+                    transitionTo = mergableStates[transitionTo];
                 }
 
                 if (mapping.ContainsKey(transitionTo))
@@ -183,17 +187,12 @@ public class DFA
                 }
                 else
                 {
-                    int shifts = 0;
-                    for (int j = 0; j < transitionTo; j++)
-                    {
-                        if (mergableStates.ContainsKey(j))
-                            shifts++;
-                    }
-
-                    transitionTo -= shifts;
+                    int newNode = after.initBlankState(acceptingStates[transitionTo]);
+                    mapping[transitionTo] = newNode;
+                    transitionTo = newNode;
                 }
-
-                after.transitions[newStateNum].Add(t.Key, transitionTo);
+                
+                after.transitions[i].Add(t.Key, transitionTo);
             }
         }
 
