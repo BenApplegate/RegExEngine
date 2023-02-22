@@ -152,9 +152,11 @@ public class DFA
         return statesToMerge;
     }
 
-    public (bool status, DFA? merged) mergeStates()
+    public (bool status, DFA? merged) mergeStates(Dictionary<int, int>? mergableStates = null)
     {
-        var mergableStates = getMergableStates();
+        if(mergableStates == null){
+            mergableStates = getMergableStates();
+        }
         if (mergableStates.Count == 0) return (false, null);
 
         DFA after = new DFA();
@@ -185,6 +187,9 @@ public class DFA
                 int transitionTo = t.Value;
                 if (mergableStates.ContainsKey(transitionTo))
                 {
+                    if(mergableStates[transitionTo] == -1){
+                        continue;
+                    }
                     transitionTo = mergableStates[transitionTo];
                 }
 
@@ -206,7 +211,7 @@ public class DFA
         return (true, after);
     }
     
-    public HashSet<int> findDeadStates()
+    public Dictionary<int, int> findDeadStates()
     {
         HashSet<int> visited = new HashSet<int>();
         Queue<int> nextStates = new Queue<int>();
@@ -234,10 +239,10 @@ public class DFA
             }
         }
 
-        HashSet<int> deadStates = new HashSet<int>();
+        Dictionary<int, int> deadStates = new Dictionary<int, int>();
         for (int i = 0; i < numStates; i++)
         {
-            if (!visited.Contains(i)) deadStates.Add(i);
+            if (!visited.Contains(i)) deadStates[i] = -1;
         }
 
         return deadStates;
@@ -252,6 +257,13 @@ public class DFA
             mergeState = merged.mergeStates();
             if (mergeState.state) merged = mergeState.altered!;
         } while (mergeState.state);
+
+        Console.WriteLine("Dead States:");
+        foreach(var s in merged.findDeadStates()){
+            Console.WriteLine($"{s.Key}:{s.Value}");
+        }
+        (bool state, DFA? altered) deadStates = merged.mergeStates(merged.findDeadStates());
+        if(deadStates.state) merged = deadStates.altered!;
 
         return merged;
     }
