@@ -138,7 +138,10 @@ public class NFA
 
     public NFA(List<string> lines, out List<char> alphabet)
     {
-        string[] firstLine = lines[0].Split(" ");
+        Dictionary<int, int> mapping = new Dictionary<int, int>();
+        int currentState = 0;
+
+        string[] firstLine = lines[0].Split(" ", StringSplitOptions.RemoveEmptyEntries);
         char lambdaChar = firstLine[1][0];
         alphabet = new List<char>();
         for (int i = 2; i < firstLine.Length; i++)
@@ -159,9 +162,31 @@ public class NFA
 
         for (int i = 1; i < lines.Count; i++)
         {
-            string[] split = lines[i].Split(' ');
+            if(lines[i].Length == 0) continue;
+            
+            string[] split = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries);
             int from = int.Parse(split[1]);
             int to = int.Parse(split[2]);
+
+            if(!mapping.ContainsKey(from)){
+                mapping[from] = currentState;
+                from = currentState;
+                currentState++;
+            }
+            else{
+                from = mapping[from];
+            }
+
+            if(!mapping.ContainsKey(to)){
+                mapping[to] = currentState;
+                to = currentState;
+                currentState++;
+            }
+            else{
+                to = mapping[to];
+            }
+
+
             acceptingStates[from] = split[0] == "+";
             for (int j = 3; j < split.Length; j++)
             {
