@@ -145,6 +145,10 @@ public class DFA
             }
         }
 
+        foreach (var s in statesToMerge)   
+        {
+            Console.WriteLine($"{s.Key}:{s.Value}");
+        }
         return statesToMerge;
     }
 
@@ -200,6 +204,43 @@ public class DFA
         }
 
         return (true, after);
+    }
+    
+    public HashSet<int> findDeadStates()
+    {
+        HashSet<int> visited = new HashSet<int>();
+        Queue<int> nextStates = new Queue<int>();
+
+        for (int i = 0; i < numStates; i++)
+        {
+            if(acceptingStates[i]) nextStates.Enqueue(i);
+        }
+
+        while (nextStates.Count > 0)
+        {
+            int s = nextStates.Dequeue();
+            if(visited.Contains(s)) continue;
+            visited.Add(s);
+
+            for (int i = 0; i < numStates; i++)
+            {
+                foreach (var t in transitions[i])
+                {
+                    if (t.Value == s)
+                    {
+                        nextStates.Enqueue(i);
+                    }
+                }
+            }
+        }
+
+        HashSet<int> deadStates = new HashSet<int>();
+        for (int i = 0; i < numStates; i++)
+        {
+            if (!visited.Contains(i)) deadStates.Add(i);
+        }
+
+        return deadStates;
     }
 
     public DFA Optimize()

@@ -31,8 +31,19 @@ class Program
         }
 
         NFA nfa = new NFA(inputFile, out List<char> alphabet);
-
+        nfa.Print();
+        Console.WriteLine("\n\n");
+        
         DFA dfa = new DFA(nfa);
+        
+        dfa.Print();
+        
+        dfa = dfa.Optimize();
+        
+        dfa.Print(false);
+
+        Console.WriteLine("Dead States:");
+        Console.WriteLine(String.Join(" ", dfa.findDeadStates()));
 
         dfa.OutputToFile(args[1], alphabet);
 
